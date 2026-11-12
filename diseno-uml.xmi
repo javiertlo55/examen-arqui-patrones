@@ -1,0 +1,220 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Diseño Procedimental — Sistema de gestión de tareas (Proxy + Adapter)
+  Formato: XMI 2.5.1 / UML 2.5.1 (OMG). Importar en Enterprise Architect:
+  Publish > Model Exchange > Import XMI (o Import Package from XMI).
+-->
+<xmi:XMI xmlns:xmi="http://www.omg.org/spec/XMI/20131001"
+         xmlns:uml="http://www.omg.org/spec/UML/20161101">
+  <xmi:Documentation exporter="Generado a mano para el parcial" exporterVersion="1.0"/>
+
+  <uml:Model xmi:type="uml:Model" xmi:id="modelo" name="Diseño Procedimental - Gestión de Tareas">
+
+    <!-- ============================================================ -->
+    <!-- Tipos PHP usados en atributos, parámetros y retornos         -->
+    <!-- ============================================================ -->
+    <packagedElement xmi:type="uml:Package" xmi:id="pkg_tipos" name="TiposPHP">
+      <packagedElement xmi:type="uml:PrimitiveType" xmi:id="t_string" name="string"/>
+      <packagedElement xmi:type="uml:PrimitiveType" xmi:id="t_int" name="int"/>
+      <packagedElement xmi:type="uml:PrimitiveType" xmi:id="t_bool" name="bool"/>
+      <packagedElement xmi:type="uml:PrimitiveType" xmi:id="t_array" name="array"/>
+      <packagedElement xmi:type="uml:Class" xmi:id="c_pdo" name="PDO">
+        <ownedComment xmi:type="uml:Comment" xmi:id="cm_pdo" annotatedElement="c_pdo">
+          <body>Clase nativa de PHP para acceder a PostgreSQL. La crea crearConexion() en conexion.php y se pasa por constructor (no es Singleton).</body>
+        </ownedComment>
+      </packagedElement>
+    </packagedElement>
+
+    <!-- ============================================================ -->
+    <!-- Cliente: index.php                                           -->
+    <!-- ============================================================ -->
+    <packagedElement xmi:type="uml:Class" xmi:id="c_index" name="index.php">
+      <ownedComment xmi:type="uml:Comment" xmi:id="cm_index" annotatedElement="c_index">
+        <body>Cliente de ambos patrones. Solo conoce TareaInterface y FuenteTareasInterface.</body>
+      </ownedComment>
+      <ownedAttribute xmi:type="uml:Property" xmi:id="a_index_session" name="_SESSION" visibility="private" type="t_array"/>
+      <ownedOperation xmi:type="uml:Operation" xmi:id="o_index_main" name="main" visibility="public"/>
+      <ownedOperation xmi:type="uml:Operation" xmi:id="o_index_crearProxy" name="crearProxyTarea" visibility="private">
+        <ownedParameter xmi:type="uml:Parameter" xmi:id="p_index_crearProxy_ret" name="return" direction="return" type="i_tarea"/>
+      </ownedOperation>
+      <ownedOperation xmi:type="uml:Operation" xmi:id="o_index_importar" name="importarCsv" visibility="private">
+        <ownedParameter xmi:type="uml:Parameter" xmi:id="p_index_importar_tareas" name="tareas" direction="in" type="i_tarea"/>
+        <ownedParameter xmi:type="uml:Parameter" xmi:id="p_index_importar_archivo" name="archivo" direction="in" type="t_array"/>
+        <ownedParameter xmi:type="uml:Parameter" xmi:id="p_index_importar_ret" name="return" direction="return" type="t_array"/>
+      </ownedOperation>
+    </packagedElement>
+
+    <!-- ============================================================ -->
+    <!-- CU1 — Patrón Proxy                                           -->
+    <!-- ============================================================ -->
+    <packagedElement xmi:type="uml:Package" xmi:id="pkg_proxy" name="proxy">
+
+      <!-- Sujeto -->
+      <packagedElement xmi:type="uml:Interface" xmi:id="i_tarea" name="TareaInterface">
+        <ownedComment xmi:type="uml:Comment" xmi:id="cm_i_tarea" annotatedElement="i_tarea">
+          <body>Patrón Proxy — rol: Sujeto.</body>
+        </ownedComment>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="a_itarea_estados" name="ESTADOS" visibility="public" type="t_array" isStatic="true" isReadOnly="true"/>
+        <ownedOperation xmi:type="uml:Operation" xmi:id="o_itarea_listar" name="listarTareas" visibility="public" isAbstract="true">
+          <ownedParameter xmi:type="uml:Parameter" xmi:id="p_itarea_listar_ret" name="return" direction="return" type="t_array"/>
+        </ownedOperation>
+        <ownedOperation xmi:type="uml:Operation" xmi:id="o_itarea_crear" name="crearTarea" visibility="public" isAbstract="true">
+          <ownedParameter xmi:type="uml:Parameter" xmi:id="p_itarea_crear_titulo" name="titulo" direction="in" type="t_string"/>
+          <ownedParameter xmi:type="uml:Parameter" xmi:id="p_itarea_crear_desc" name="descripcion" direction="in" type="t_string"/>
+          <ownedParameter xmi:type="uml:Parameter" xmi:id="p_itarea_crear_estado" name="estado" direction="in" type="t_string"/>
+          <ownedParameter xmi:type="uml:Parameter" xmi:id="p_itarea_crear_ret" name="return" direction="return" type="t_int"/>
+        </ownedOperation>
+        <ownedOperation xmi:type="uml:Operation" xmi:id="o_itarea_eliminar" name="eliminarTarea" visibility="public" isAbstract="true">
+          <ownedParameter xmi:type="uml:Parameter" xmi:id="p_itarea_eliminar_id" name="id" direction="in" type="t_int"/>
+          <ownedParameter xmi:type="uml:Parameter" xmi:id="p_itarea_eliminar_ret" name="return" direction="return" type="t_bool"/>
+        </ownedOperation>
+      </packagedElement>
+
+      <!-- SujetoReal -->
+      <packagedElement xmi:type="uml:Class" xmi:id="c_real" name="TareaReal">
+        <ownedComment xmi:type="uml:Comment" xmi:id="cm_real" annotatedElement="c_real">
+          <body>Patrón Proxy — rol: SujetoReal. Accede a PostgreSQL; no sabe nada de roles.</body>
+        </ownedComment>
+        <interfaceRealization xmi:type="uml:InterfaceRealization" xmi:id="ir_real_tarea" client="c_real" supplier="i_tarea" contract="i_tarea"/>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="a_real_db" name="db" visibility="private" type="c_pdo"/>
+        <ownedOperation xmi:type="uml:Operation" xmi:id="o_real_construct" name="__construct" visibility="public">
+          <ownedParameter xmi:type="uml:Parameter" xmi:id="p_real_construct_db" name="db" direction="in" type="c_pdo"/>
+        </ownedOperation>
+        <ownedOperation xmi:type="uml:Operation" xmi:id="o_real_listar" name="listarTareas" visibility="public">
+          <ownedParameter xmi:type="uml:Parameter" xmi:id="p_real_listar_ret" name="return" direction="return" type="t_array"/>
+        </ownedOperation>
+        <ownedOperation xmi:type="uml:Operation" xmi:id="o_real_crear" name="crearTarea" visibility="public">
+          <ownedParameter xmi:type="uml:Parameter" xmi:id="p_real_crear_titulo" name="titulo" direction="in" type="t_string"/>
+          <ownedParameter xmi:type="uml:Parameter" xmi:id="p_real_crear_desc" name="descripcion" direction="in" type="t_string"/>
+          <ownedParameter xmi:type="uml:Parameter" xmi:id="p_real_crear_estado" name="estado" direction="in" type="t_string"/>
+          <ownedParameter xmi:type="uml:Parameter" xmi:id="p_real_crear_ret" name="return" direction="return" type="t_int"/>
+        </ownedOperation>
+        <ownedOperation xmi:type="uml:Operation" xmi:id="o_real_eliminar" name="eliminarTarea" visibility="public">
+          <ownedParameter xmi:type="uml:Parameter" xmi:id="p_real_eliminar_id" name="id" direction="in" type="t_int"/>
+          <ownedParameter xmi:type="uml:Parameter" xmi:id="p_real_eliminar_ret" name="return" direction="return" type="t_bool"/>
+        </ownedOperation>
+        <ownedOperation xmi:type="uml:Operation" xmi:id="o_real_reiniciar" name="reiniciarNumeracionSiVacia" visibility="private"/>
+      </packagedElement>
+
+      <!-- Proxy -->
+      <packagedElement xmi:type="uml:Class" xmi:id="c_proxy" name="ProxyTarea">
+        <ownedComment xmi:type="uml:Comment" xmi:id="cm_proxy" annotatedElement="o_proxy_eliminar">
+          <body>if (usuarioRol != 'admin') lanza error 403
+return tareaReal-&gt;eliminarTarea(id)</body>
+        </ownedComment>
+        <interfaceRealization xmi:type="uml:InterfaceRealization" xmi:id="ir_proxy_tarea" client="c_proxy" supplier="i_tarea" contract="i_tarea"/>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="a_proxy_real" name="tareaReal" visibility="private" type="i_tarea"/>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="a_proxy_rol" name="usuarioRol" visibility="private" type="t_string">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="a_proxy_rol_lower" value="0"/>
+          <upperValue xmi:type="uml:LiteralUnlimitedNatural" xmi:id="a_proxy_rol_upper" value="1"/>
+        </ownedAttribute>
+        <ownedOperation xmi:type="uml:Operation" xmi:id="o_proxy_construct" name="__construct" visibility="public">
+          <ownedParameter xmi:type="uml:Parameter" xmi:id="p_proxy_construct_real" name="tareaReal" direction="in" type="i_tarea"/>
+          <ownedParameter xmi:type="uml:Parameter" xmi:id="p_proxy_construct_rol" name="usuarioRol" direction="in" type="t_string"/>
+        </ownedOperation>
+        <ownedOperation xmi:type="uml:Operation" xmi:id="o_proxy_listar" name="listarTareas" visibility="public">
+          <ownedParameter xmi:type="uml:Parameter" xmi:id="p_proxy_listar_ret" name="return" direction="return" type="t_array"/>
+        </ownedOperation>
+        <ownedOperation xmi:type="uml:Operation" xmi:id="o_proxy_crear" name="crearTarea" visibility="public">
+          <ownedParameter xmi:type="uml:Parameter" xmi:id="p_proxy_crear_titulo" name="titulo" direction="in" type="t_string"/>
+          <ownedParameter xmi:type="uml:Parameter" xmi:id="p_proxy_crear_desc" name="descripcion" direction="in" type="t_string"/>
+          <ownedParameter xmi:type="uml:Parameter" xmi:id="p_proxy_crear_estado" name="estado" direction="in" type="t_string"/>
+          <ownedParameter xmi:type="uml:Parameter" xmi:id="p_proxy_crear_ret" name="return" direction="return" type="t_int"/>
+        </ownedOperation>
+        <ownedOperation xmi:type="uml:Operation" xmi:id="o_proxy_eliminar" name="eliminarTarea" visibility="public">
+          <ownedParameter xmi:type="uml:Parameter" xmi:id="p_proxy_eliminar_id" name="id" direction="in" type="t_int"/>
+          <ownedParameter xmi:type="uml:Parameter" xmi:id="p_proxy_eliminar_ret" name="return" direction="return" type="t_bool"/>
+        </ownedOperation>
+      </packagedElement>
+
+      <!-- ProxyTarea delega en TareaReal (flecha punteada, como ProxyCuenta ..> CuentaReal) -->
+      <packagedElement xmi:type="uml:Dependency" xmi:id="d_proxy_real" name="delega" client="c_proxy" supplier="c_real"/>
+
+      <!-- TareaReal usa PDO (como CuentaReal ..> DBInterface) -->
+      <packagedElement xmi:type="uml:Usage" xmi:id="u_real_pdo" name="usa" client="c_real" supplier="c_pdo"/>
+    </packagedElement>
+
+    <!-- ============================================================ -->
+    <!-- CU2 — Patrón Adapter                                         -->
+    <!-- ============================================================ -->
+    <packagedElement xmi:type="uml:Package" xmi:id="pkg_adapter" name="adapter">
+
+      <!-- Target -->
+      <packagedElement xmi:type="uml:Interface" xmi:id="i_fuente" name="FuenteTareasInterface">
+        <ownedComment xmi:type="uml:Comment" xmi:id="cm_i_fuente" annotatedElement="i_fuente">
+          <body>Patrón Adapter — rol: Target. Lo que el sistema espera: tareas validadas.</body>
+        </ownedComment>
+        <ownedOperation xmi:type="uml:Operation" xmi:id="o_ifuente_obtener" name="obtenerTareas" visibility="public" isAbstract="true">
+          <ownedParameter xmi:type="uml:Parameter" xmi:id="p_ifuente_obtener_ret" name="return" direction="return" type="t_array"/>
+        </ownedOperation>
+        <ownedOperation xmi:type="uml:Operation" xmi:id="o_ifuente_errores" name="obtenerErrores" visibility="public" isAbstract="true">
+          <ownedParameter xmi:type="uml:Parameter" xmi:id="p_ifuente_errores_ret" name="return" direction="return" type="t_array"/>
+        </ownedOperation>
+      </packagedElement>
+
+      <!-- Adapter -->
+      <packagedElement xmi:type="uml:Class" xmi:id="c_adapter" name="AdapterTareasCSV">
+        <ownedComment xmi:type="uml:Comment" xmi:id="cm_adapter" annotatedElement="o_adapter_obtener">
+          <body>foreach (adaptee-&gt;leerRegistros(contenido, true) as registro)
+    tareas[] = registroATarea(registro)</body>
+        </ownedComment>
+        <interfaceRealization xmi:type="uml:InterfaceRealization" xmi:id="ir_adapter_fuente" client="c_adapter" supplier="i_fuente" contract="i_fuente"/>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="a_adapter_adaptee" name="adaptee" visibility="private" type="c_lector" association="as_adapter_lector">
+          <lowerValue xmi:type="uml:LiteralInteger" xmi:id="a_adapter_adaptee_lower" value="1"/>
+          <upperValue xmi:type="uml:LiteralUnlimitedNatural" xmi:id="a_adapter_adaptee_upper" value="1"/>
+        </ownedAttribute>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="a_adapter_contenido" name="contenido" visibility="private" type="t_string"/>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="a_adapter_errores" name="errores" visibility="private" type="t_array"/>
+        <ownedOperation xmi:type="uml:Operation" xmi:id="o_adapter_construct" name="__construct" visibility="public">
+          <ownedParameter xmi:type="uml:Parameter" xmi:id="p_adapter_construct_adaptee" name="adaptee" direction="in" type="c_lector"/>
+          <ownedParameter xmi:type="uml:Parameter" xmi:id="p_adapter_construct_contenido" name="contenido" direction="in" type="t_string"/>
+        </ownedOperation>
+        <ownedOperation xmi:type="uml:Operation" xmi:id="o_adapter_obtener" name="obtenerTareas" visibility="public">
+          <ownedParameter xmi:type="uml:Parameter" xmi:id="p_adapter_obtener_ret" name="return" direction="return" type="t_array"/>
+        </ownedOperation>
+        <ownedOperation xmi:type="uml:Operation" xmi:id="o_adapter_errores" name="obtenerErrores" visibility="public">
+          <ownedParameter xmi:type="uml:Parameter" xmi:id="p_adapter_errores_ret" name="return" direction="return" type="t_array"/>
+        </ownedOperation>
+        <ownedOperation xmi:type="uml:Operation" xmi:id="o_adapter_registro" name="registroATarea" visibility="private">
+          <ownedParameter xmi:type="uml:Parameter" xmi:id="p_adapter_registro_reg" name="registro" direction="in" type="t_array"/>
+          <ownedParameter xmi:type="uml:Parameter" xmi:id="p_adapter_registro_fila" name="numeroFila" direction="in" type="t_int"/>
+          <ownedParameter xmi:type="uml:Parameter" xmi:id="p_adapter_registro_ret" name="return" direction="return" type="t_array">
+            <lowerValue xmi:type="uml:LiteralInteger" xmi:id="p_adapter_registro_ret_lower" value="0"/>
+            <upperValue xmi:type="uml:LiteralUnlimitedNatural" xmi:id="p_adapter_registro_ret_upper" value="1"/>
+          </ownedParameter>
+        </ownedOperation>
+      </packagedElement>
+
+      <!-- Adaptee -->
+      <packagedElement xmi:type="uml:Class" xmi:id="c_lector" name="LectorCSV">
+        <ownedComment xmi:type="uml:Comment" xmi:id="cm_lector" annotatedElement="c_lector">
+          <body>Patrón Adapter — rol: Adaptee. Clase existente con interfaz incompatible: devuelve filas de texto por posición (string[][]). No conoce las tareas.</body>
+        </ownedComment>
+        <ownedAttribute xmi:type="uml:Property" xmi:id="a_lector_bom" name="BOM_UTF8" visibility="private" type="t_string" isStatic="true" isReadOnly="true"/>
+        <ownedOperation xmi:type="uml:Operation" xmi:id="o_lector_leer" name="leerRegistros" visibility="public">
+          <ownedParameter xmi:type="uml:Parameter" xmi:id="p_lector_leer_contenido" name="contenido" direction="in" type="t_string"/>
+          <ownedParameter xmi:type="uml:Parameter" xmi:id="p_lector_leer_encabezado" name="tieneEncabezado" direction="in" type="t_bool"/>
+          <ownedParameter xmi:type="uml:Parameter" xmi:id="p_lector_leer_ret" name="return" direction="return" type="t_array"/>
+        </ownedOperation>
+      </packagedElement>
+
+      <!-- AdapterTareasCSV —adaptee→ LectorCSV (asociación dirigida) -->
+      <packagedElement xmi:type="uml:Association" xmi:id="as_adapter_lector" name="adapta" memberEnd="a_adapter_adaptee as_adapter_lector_origen">
+        <ownedEnd xmi:type="uml:Property" xmi:id="as_adapter_lector_origen" type="c_adapter" association="as_adapter_lector"/>
+      </packagedElement>
+    </packagedElement>
+
+    <!-- ============================================================ -->
+    <!-- index.php usa las dos interfaces (asociaciones dirigidas)     -->
+    <!-- ============================================================ -->
+    <packagedElement xmi:type="uml:Association" xmi:id="as_index_tarea" name="usa" memberEnd="as_index_tarea_origen as_index_tarea_destino" navigableOwnedEnd="as_index_tarea_destino">
+      <ownedEnd xmi:type="uml:Property" xmi:id="as_index_tarea_origen" type="c_index" association="as_index_tarea"/>
+      <ownedEnd xmi:type="uml:Property" xmi:id="as_index_tarea_destino" type="i_tarea" association="as_index_tarea"/>
+    </packagedElement>
+    <packagedElement xmi:type="uml:Association" xmi:id="as_index_fuente" name="usa" memberEnd="as_index_fuente_origen as_index_fuente_destino" navigableOwnedEnd="as_index_fuente_destino">
+      <ownedEnd xmi:type="uml:Property" xmi:id="as_index_fuente_origen" type="c_index" association="as_index_fuente"/>
+      <ownedEnd xmi:type="uml:Property" xmi:id="as_index_fuente_destino" type="i_fuente" association="as_index_fuente"/>
+    </packagedElement>
+
+  </uml:Model>
+</xmi:XMI>

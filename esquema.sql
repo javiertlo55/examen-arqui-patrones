@@ -1,13 +1,15 @@
 -- =====================================================================
--- Sistema web de gestión de tareas — Esquema de base de datos (PostgreSQL 14+)
+-- Sistema web de gestión de socios de un gimnasio — Esquema (PostgreSQL 14+)
 -- Diseño: 2 tablas independientes, mínimas y con integridad en la BD.
 -- Idempotente: se puede ejecutar varias veces sin error.
 -- Uso: ejecutar en el editor SQL de tu PostgreSQL (o: psql -f esquema.sql)
 -- =====================================================================
 
 -- ---------------------------------------------------------------------
--- usuarios: quién inicia sesión y con qué rol.
--- El rol lo consulta el Proxy (proxy/Proxy.php, CU1) antes de eliminar.
+-- usuarios: personal del gimnasio que inicia sesión y su rol.
+--   admin   -> puede dar de baja socios
+--   usuario -> recepcionista: lista, registra e importa socios
+-- El rol lo consulta el Proxy (negocio/ProxySocio.php, CU1) antes de eliminar.
 -- ---------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS usuarios (
   id            INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
@@ -23,15 +25,15 @@ CREATE TABLE IF NOT EXISTS usuarios (
 CREATE UNIQUE INDEX IF NOT EXISTS ux_usuarios_nombre ON usuarios (lower(nombre));
 
 -- ---------------------------------------------------------------------
--- tareas: lo que se lista, se crea, se elimina (CU1) y se importa (CU2).
--- Las columnas titulo, descripcion y estado coinciden 1 a 1 con el CSV.
+-- socios: lo que se lista, se registra, se da de baja (CU1) y se importa (CU2).
+-- Las columnas nombre, telefono y plan coinciden 1 a 1 con el CSV.
 -- ---------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS tareas (
-  id          INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-  titulo      VARCHAR(120) NOT NULL
-              CHECK (length(trim(titulo)) >= 1),
-  descripcion TEXT         NOT NULL DEFAULT '',
-  estado      VARCHAR(20)  NOT NULL DEFAULT 'pendiente'
-              CHECK (estado IN ('pendiente', 'en_progreso', 'completada')),
-  creado_en   TIMESTAMPTZ  NOT NULL DEFAULT now()
+CREATE TABLE IF NOT EXISTS socios (
+  id         INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  nombre     VARCHAR(100) NOT NULL
+             CHECK (length(trim(nombre)) >= 1),
+  telefono   VARCHAR(30)  NOT NULL DEFAULT '',
+  plan       VARCHAR(20)  NOT NULL DEFAULT 'mensual'
+             CHECK (plan IN ('mensual', 'trimestral', 'anual')),
+  creado_en  TIMESTAMPTZ  NOT NULL DEFAULT now()
 );

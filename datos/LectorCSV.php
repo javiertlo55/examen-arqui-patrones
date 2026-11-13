@@ -1,8 +1,9 @@
 <?php
+// Capa de datos
 // Patrón Adapter — rol: Adaptee
 // Clase existente cuya interfaz no coincide con la que espera el sistema:
 // solo separa líneas y columnas y devuelve filas de texto por posición (string[][]).
-// No conoce las tareas; el Adapter es quien la traduce.
+// No conoce a los socios; el Adapter es quien la traduce.
 
 class LectorCSV
 {
